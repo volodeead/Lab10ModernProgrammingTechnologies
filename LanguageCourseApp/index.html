@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Language Courses App</title>
+</head>
+<body>
+    <div>
+        <h2>All Courses</h2>
+        <ul id="courses"></ul>
+        <button onclick="loadCourses();">Refresh List</button>
+    </div>
+    <div>
+        <h2>Add New Course</h2>
+        Name: <input type="text" id="addName" /><br>
+        Price: <input type="number" id="addPrice" /><br>
+        Start Date: <input type="date" id="addStartDate" /><br>
+        <button onclick="addCourse();">Add Course</button>
+    </div>
+    <div>
+        <h2>Update Course</h2>
+        ID: <input type="number" id="updateId" /><br>
+        Name: <input type="text" id="updateName" /><br>
+        Price: <input type="number" id="updatePrice" /><br>
+        Start Date: <input type="date" id="updateStartDate" /><br>
+        <button onclick="updateCourse();">Update Course</button>
+    </div>
+    <div>
+        <h2>Delete Course</h2>
+        ID: <input type="number" id="deleteId" />
+        <button onclick="deleteCourse();">Delete Course</button>
+    </div>
+    <div>
+        <h2>Search by ID</h2>
+        <input type="number" id="searchId" />
+        <button onclick="searchCourse();">Search</button>
+        <p id="searchResult"></p>
+    </div>
+    <script src="jquery.js"></script>
+    <script>
+        var uri = 'api/courses';
+
+        function loadCourses() {
+            $.getJSON(uri)
+                .done(function (data) {
+                    $('#courses').empty();
+                    $.each(data, function (key, item) {
+                        $('<li>', { text: formatItem(item) }).appendTo($('#courses'));
+                    });
+                });
+        }
+
+        function addCourse() {
+            var course = {
+                Name: $('#addName').val(),
+                Price: $('#addPrice').val(),
+                StartDate: $('#addStartDate').val()
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: uri,
+                contentType: 'application/json',
+                data: JSON.stringify(course)
+            }).done(function (data) {
+                $('#addName').val('');
+                $('#addPrice').val('');
+                $('#addStartDate').val('');
+                loadCourses(); // refresh the list
+            });
+        }
+
+        function updateCourse() {
+            var course = {
+                Id: $('#updateId').val(),
+                Name: $('#updateName').val(),
+                Price: $('#updatePrice').val(),
+                StartDate: $('#updateStartDate').val()
+            };
+
+            $.ajax({
+                type: 'PUT',
+                url: uri + '/' + course.Id,
+                contentType: 'application/json',
+                data: JSON.stringify(course)
+            }).done(function () {
+                loadCourses(); // refresh the list
+            });
+        }
+
+        function deleteCourse() {
+            var id = $('#deleteId').val();
+
+            $.ajax({
+                type: 'DELETE',
+                url: uri + '/' + id
+            }).done(function () {
+                loadCourses(); // refresh the list
+            });
+        }
+
+        function searchCourse() {
+            var id = $('#searchId').val();
+
+            $.getJSON(uri + '/' + id)
+                .done(function (data) {
+                    $('#searchResult').text(formatItem(data));
+                })
+                .fail(function () {
+                    $('#searchResult').text('No course found with ID ' + id);
+                });
+        }
+
+        function formatItem(item) {
+            return item.Name + ': $' + item.Price + ' (Starts: ' + item.StartDate.substring(0, 10) + ')';
+        }
+
+        // Initially load the course list
+        loadCourses();
+    </script>
+</body>
+</html>
+
